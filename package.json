@@ -1,0 +1,37 @@
+{
+  "name": "taskwise-finances-back",
+  "version": "1.0.0",
+  "description": "Back end Part Of the Project",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "test",
+    "build": "tsc"
+  },
+  "keywords": [
+    "TaskWise",
+    "Finances",
+    "Backend"
+  ],
+  "author": "up-to-task",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.24.0",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.13",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jest": "^29.5.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.2.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}
