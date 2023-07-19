@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Back end Part Of the Project",
   "main": "index.ts",
-  "type": "module",
   "scripts": {
     "test": "test",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "tsc  nodemon dist/index.js"
   },
   "keywords": [
     "TaskWise",
