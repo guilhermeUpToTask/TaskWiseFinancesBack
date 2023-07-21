@@ -1,17 +1,16 @@
 import express from 'express';
-import { createClient } from '@supabase/supabase-js'
 import cors from 'cors';
-import supabase from './supabase';
-import wallet_controller from './controllers/wallet_controller';
+import wallet_router from './routes/wallet_router';
 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({credentials: true, origin: true}));
 
 // Add your routes here
+app.use('/wallet', wallet_router);
 
-wallet_controller.createRow('errir');
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

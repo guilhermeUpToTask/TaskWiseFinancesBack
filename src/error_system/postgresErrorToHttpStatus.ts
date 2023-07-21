@@ -1,4 +1,8 @@
-const postgresErrorToHttpStatus = {
+interface ErrorCodeToStatusMap {
+  [key: string]: number;
+}
+
+const postgresErrorToHttpStatus: ErrorCodeToStatusMap = {
     '08*': 503, // pg connection err
     '09*': 500, // triggered action exception
     '0L*': 403, // invalid grantor
