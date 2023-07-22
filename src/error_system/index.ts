@@ -10,14 +10,12 @@ export const getNewResponseError = (message: string, status_code: number): Respo
     return { name: 'Response Error', message, status_code }
 }
 
-
 const isPostgrestError = (error: any): error is PostgrestError => {
     return error.code !== undefined
 }
 const isResponseError = (error: any): error is ResponseError => {
     return error.status_code !== undefined
 }
-
 const isValidationError = (error: any): error is ValidationError => {
     return error.errors !== undefined
 }
@@ -46,7 +44,7 @@ export const routerErrorHandler = (error: any): ServerResponse => {
         return {
             data: null,
             error: error,
-            message: 'Request Denied due to failed validation',
+            message: 'Invalid Request',
             status: 400,
         }
     
