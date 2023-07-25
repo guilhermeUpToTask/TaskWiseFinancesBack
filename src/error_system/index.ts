@@ -5,6 +5,8 @@ import errorToStatus from './postgresErrorToHttpStatus';
 //Logging: You are using console.error to log errors. It is a good practice to include more 
 //contextual information in the logs, like the timestamp 
 //or a unique identifier for the request. This can be helpful for debugging and monitoring.
+//later we will use as middeware to refactor the code and englobe all routes better
+
 
 export const getNewResponseError = (message: string, status_code: number): ResponseError => {
     return { name: 'Response Error', message, status_code }

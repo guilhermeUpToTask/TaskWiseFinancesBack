@@ -1,10 +1,6 @@
 import supabase from '../supabase'
-import { ResponseError, ServerResponse, op_type, operation } from '../types'
+import {ServerResponse, op_type, Operation, op_map } from '../types'
 import wallet_controller from './wallet_controller';
-
-interface op_map {
-    [key: string]: (user_id: string, value: number) => Promise<ServerResponse>;
-}
 
 
 const op_create_map: op_map = {
@@ -16,15 +12,26 @@ const op_delete_map: op_map = {
     ['expanse']: (user_id: string, value: number) => wallet_controller.add(user_id, value)
 }
 
-
-const create = async (operation: operation): Promise<ServerResponse> => {
+const create = async (
+    name: string,
+    value: number,
+    description: string,
+    wallet_id: number,
+    operation_type: op_type,
+    operation_type_id: number | undefined,
+    date: string,
+    user_id: string,
+): Promise<ServerResponse> => {
     try {
-        await op_create_map[operation.operation_type](operation.user_id, operation.value);
-        const { error } = await supabase.from('wallet_operations').insert(operation);
+        await op_create_map[operation_type](user_id, value);
+        const { error } = await supabase.from('wallet_operations')
+            .insert({ name, user_id, value, description, wallet_id, operation_type, operation_type_id, date });
         if (error)
             throw error;
         else {
-            return { data: operation, status: 201, error, message: 'sucessfully created wallet' }
+            return {
+                data: { name, user_id, value, description, wallet_id, operation_type, operation_type_id, date } as Operation,
+                status: 201, error, message: 'sucessfully created wallet'}
         }
 
     } catch (error) {
@@ -32,9 +39,11 @@ const create = async (operation: operation): Promise<ServerResponse> => {
         throw error
     }
 }
-const remove = async (operation: operation, operation_id: number): Promise<ServerResponse> => {
+const remove = async (
+    user_id: string, operation_id: number, operation_type: op_type, value: number
+): Promise<ServerResponse> => {
     try {
-        await op_delete_map[operation.operation_type](operation.user_id, operation.value);
+        await op_delete_map[operation_type](user_id, value);
         const { data, error } = await supabase.from('wallet_operations').delete().match({ operation_id });
         if (error)
             throw error;
@@ -57,7 +66,7 @@ const getAll = async (user_id: string): Promise<ServerResponse> => {
             return { data, status: 200, error, message: 'sucessfully selected all wallet operation' }
 
     } catch (error) {
-        console.error('error while selecting wallet operation', error);
+        console.error('error while selecting all in wallet operation', error);
         throw error
     }
 }
@@ -86,7 +95,7 @@ const getAllBetweenDates = async (user_id: string, startDate: string, endDate: s
             return { data, status: 200, error, message: 'sucessfully selected date wallet operation' }
 
     } catch (error) {
-        console.error('error while selecting date wallet operation', error);
+        console.error('error while selecting betweemdate wallet operation', error);
         throw error
     }
 }
