@@ -37,7 +37,6 @@ export type AnnotationRepeat = 'never' | 'daily' | 'weekly' | 'monthly';
 export type Annotation = {
     id: number,
     user_id: string,
-    annon_type_id: number,
     annon_type: AnnotationType,
     name: string,
     description: string,
@@ -45,4 +44,5 @@ export type Annotation = {
     date: 'string',
     repeat: AnnotationRepeat, // on this we create a array if month create 12, if dayly create 31 or 30 if weakly create 4
     status: AnnotationStatus,
+    annon_type_id?: number,
 }
