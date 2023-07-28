@@ -29,5 +29,7 @@ const postgresErrorToHttpStatus: ErrorCodeToStatusMap = {
     'XX*': 500, // internal error
     '42883': 404, // undefined function
     '42P01': 404, // undefined table
+    '42703' : 404, // undefined column
+    '428C9': 404 // cannot insert a non-DEFAULT value into column 
   };
   export default postgresErrorToHttpStatus;

@@ -5,7 +5,6 @@ import { getNewResponseError } from '../error_system';
 const create = async (user_id: string): Promise<ServerResponse> => {
     try {
         const wallet = {
-            id: 0,
             user_id: user_id,
             value: 0
         }
@@ -68,6 +67,7 @@ const add = async (user_id: string, value: number): Promise<ServerResponse> => {
 }
 const subtract = async (user_id: string, value: number): Promise<ServerResponse> => {
     try {
+        console.log('from subtract wallet_controller.ts', 'value', value);
         const { data } = await get(user_id);
         if (!data)
             throw getNewResponseError('wallet not Found', 404)
