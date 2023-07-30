@@ -6,13 +6,12 @@ import { routerErrorHandler } from '../error_system/index'
 import { body, header, validationResult, matchedData, check } from 'express-validator';
 import wallet_op_controller from '../controllers/wallet_op_controller';
 import { getFirstAndLastDayOfMonth } from '../lib/functions/date';
+
 const wallet_operation_router = express.Router();
-
-
 //later we will refactor the code on the validation chain
 
 
-//need to see later if the user id matchs with the operation user id
+
 wallet_operation_router.post('/create', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
@@ -23,11 +22,10 @@ wallet_operation_router.post('/create', [
     body('description').escape().notEmpty().withMessage('operation description is required')
         .isString().withMessage('operation description must be a string'),
     body('operation_type').escape().notEmpty().withMessage('operation_type is required')
-        .isIn(['income', 'expense']).withMessage('operation_type must be income or expense'),
+        .isIn(['income', 'expanse']).withMessage('operation_type must be income or expanse'),
     body('operation_type_id').escape().toInt(),
 ], async (req: Request, res: Response) => {
     try {
-        console.log('body request:', req.body);
         validationResult(req).throw();
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
@@ -35,7 +33,7 @@ wallet_operation_router.post('/create', [
         const { name, value, description, operation_type, operation_type_id } = req.body;
 
         const { data, error, status, message } = await wallet_op_controller.
-            create(name, value, description, operation_type, user_id);
+            create(name, value, description, operation_type, user_id,operation_type_id);
 
         //we should not return user_id back to client...
         return res.status(status).json({ data, error, message });

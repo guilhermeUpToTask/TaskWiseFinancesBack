@@ -39,6 +39,7 @@ const get = async (user_id: string): Promise<ServerResponse> => {
 }
 const update = async (user_id: string, value: number): Promise<ServerResponse> => {
     try {
+        console.log('value from update', value);
         const { error, data } = await supabase.from('wallets').update({ value }).eq('user_id', user_id);
         if (error)
             throw error;
@@ -55,7 +56,7 @@ const add = async (user_id: string, value: number): Promise<ServerResponse> => {
     try {
         const { data } = await get(user_id);
         if (data)
-            return await update(user_id, data.value + value);
+            return await update(user_id, (data.value + value));
         else {
             const newError: ResponseError = { name: '404 Error', message: 'wallet not Found', status_code: 404 }
             throw newError
@@ -70,11 +71,12 @@ const subtract = async (user_id: string, value: number): Promise<ServerResponse>
         console.log('from subtract wallet_controller.ts', 'value', value);
         const { data } = await get(user_id);
         if (!data)
-            throw getNewResponseError('wallet not Found', 404)
+            throw getNewResponseError('wallet not Found', 404);
         if (data.value as number < value)
-            throw getNewResponseError('value must be below wallet value', 400)
+            throw getNewResponseError('value must be below wallet value', 400);
+        console.log('data.value', data.value);
 
-        return await update(user_id, data.value as number - value);
+        return await update(user_id, (data.value as number - value));
     } catch (error) {
         console.error('error while subtracting  value to wallet', error);
         throw error
