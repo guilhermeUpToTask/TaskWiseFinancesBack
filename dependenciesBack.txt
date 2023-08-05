@@ -9,6 +9,8 @@ ts-node ok
 nodemon ok 
 typescript ok
 supertest ok
+dotenv ok 
+daysjs
 
 "@types/cookie-parser": "^1.4.3", ok 
     "@types/cors": "^2.8.13", ok 

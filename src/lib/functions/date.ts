@@ -6,3 +6,9 @@ export function getFirstAndLastDayOfMonth(year: number, month: number) {
 
     return { firstDay: firstDay.format('YYYY-MM-DD'), lastDay: lastDay.format('YYYY-MM-DD') }
 }
+
+
+function getHashMapFromDates (dates: string[], objs : {}) {
+    const hashMap: { [key: string]: [] } = {};
+    return hashMap;
+}

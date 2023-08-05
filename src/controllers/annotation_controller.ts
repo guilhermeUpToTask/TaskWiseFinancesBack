@@ -68,7 +68,7 @@ const remove = async (
     user_id: string
 ): Promise<ServerResponse> => {
     try {
-        const { data, error } = await supabase.from('annotations').delete().match({ id:annotation_id, user_id }).select();
+        const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_id, user_id }).select();
         if (error) throw error;
 
         else {
@@ -96,8 +96,8 @@ const update = async (
 ): Promise<ServerResponse> => {
     try {
 
-        const {message: operationMessage} = await createOperationByStatus(
-            annotation_id, name, value, user_id, status, annon_type)
+        const { message: operationMessage } = await createOperationByStatus(
+            annotation_id, name, value, user_id, status, annon_type);
 
         const { error, data } = await supabase.from('annotations').update({ user_id, annon_type_id, annon_type, name, description, value, date, repeat, status })
             .match({ id: annotation_id, user_id: user_id }).select();
@@ -105,8 +105,8 @@ const update = async (
 
         else {
             return {
-                data, status: 200, error, 
-                message:`Annotation: Sucessfully update annotation 
+                data, status: 200, error,
+                message: `Annotation: Sucessfully update annotation 
                 Wallet Operation: ${operationMessage}
                 `
             }
@@ -150,7 +150,41 @@ const getStatus = async (
         throw error
     }
 }
+const confirmStatus = async (
+    user_id: string,
+    annotation_id: number,
+    name: string,
+    value: number,
+    status: AnnotationStatus,
+    annon_type: AnnotationType,
+): Promise<ServerResponse> => {
+    try {
+        if (status === 'payed' || status === 'recived') {
+            throw getNewResponseError('Annotation already confirmed', 400);
+        }
+        else if (status === 'expired' || status === 'pendent') {
+            const newStatus : AnnotationStatus= (annon_type === 'payment') ? 'recived' : 'payed';
 
+            const { message: operationMessage } = await createOperationByStatus(
+                annotation_id, name, value, user_id, newStatus, annon_type);
+
+            const { data, error } = await supabase.from('annotations').update({ status:newStatus })
+                .match({ id: annotation_id, user_id }).select();
+            if (error)
+                throw error;
+            else
+            return {
+                data, status: 200, error,
+                message: `Annotation: Sucessfully confirmed status 
+                Wallet Operation: ${operationMessage}
+                `
+            }
+        }
+    } catch (error) {
+        console.error('error while selecting annotation status', error);
+        throw error
+    }
+}
 
 const checkStatus = (
     newStatus: AnnotationStatus,
@@ -164,7 +198,7 @@ const checkStatus = (
 
     if (newStatus === 'recived' || newStatus === 'payed')
         return 'create'
-
+    // case old status is alread confirmed and will reverse it back
     return 'delete'
 
 }
@@ -268,10 +302,10 @@ const getAll = async (
 
 const getAllType = async (
     user_id: string,
-    annon_type: AnnotationType
+    annotation_type: AnnotationType
 ): Promise<ServerResponse> => {
     try {
-        const { data } = await filterAnnotation(user_id, annon_type);
+        const { data } = await filterAnnotation(user_id, annotation_type);
         return {
             data: data as Annotation[] || [], status: 200, error: null,
             message: 'sucessfully selected all by  type annotations'
@@ -334,6 +368,7 @@ export default {
     create,
     remove,
     update,
+    confirmStatus,
     get,
     filterAnnotation,
     getAll,

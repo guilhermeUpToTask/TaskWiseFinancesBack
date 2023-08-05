@@ -66,8 +66,8 @@ annotation_router.put('/update', [
         .isIn(['never', 'daily', 'weekly', 'monthly']).withMessage('invalid annotation repeat '),
     body('date').notEmpty().withMessage('date is required')
         .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
-    body('annotation_id').escape().notEmpty().withMessage('annotation_id is required')
-        .isInt().withMessage('annotation_id must be a number'),
+    body('id').escape().notEmpty().withMessage('annotation id is required')
+        .isInt().withMessage('annotation id must be a number'),
     body('annon_type').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['bill', 'payment']).withMessage('annotation type must be bills or payment'),
     body('annon_type_id').escape().toInt(),
@@ -78,10 +78,10 @@ annotation_router.put('/update', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { annotation_id, name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } = req.body;
+        const { id, name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } = req.body;
 
         const { data, error, status, message } = await annotation_controller
-            .update(annotation_id, user_id, name, description, value, date, repeat, annon_status, annon_type, annon_type_id);
+            .update(id, user_id, name, description, value, date, repeat, annon_status, annon_type, annon_type_id);
 
         //we should not return user_id back to client...
         return res.status(status).json({ data, error, message });
@@ -94,6 +94,51 @@ annotation_router.put('/update', [
         return res.status(status).json({ data, error, message });
     }
 });
+
+annotation_router.put('/confirm_status', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+    body('id').escape().notEmpty().withMessage('annotation_id is required')
+        .isInt().withMessage('annotation id must be a number'),
+    body('status').escape().notEmpty().withMessage('annotation type is required')
+        .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
+    body('annon_type').escape().notEmpty().withMessage('annotation type is required')
+        .isIn(['bill', 'payment']).withMessage('annotation type must be bills or payment'),
+    body('name').escape().notEmpty().withMessage('annotation name is required'),
+    body('value').escape().notEmpty().withMessage('annotation value is required')
+        .isNumeric().withMessage('annotation value must be a number').toFloat(),
+
+], async (req: Request, res: Response) => {
+    try {
+        console.log(req.body);
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+        const { id: annotation_id, name, value, status: annon_status, annon_type } = req.body;
+
+        const { data, error, status, message } = await annotation_controller
+            .confirmStatus(
+                user_id as string,
+                annotation_id as number,
+                name as string,
+                value as number,
+                annon_status as AnnotationStatus,
+                annon_type as AnnotationType
+            );
+        return res.status(status).json({ data, error, message });
+    }
+    catch (e) {
+        console.error(`A Error Ocurred in annotation_router.ts delete router!
+    TimeStamp: ${Date.now().toLocaleString('en-US')}
+    Error: ${e}`);
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, message, error });
+    }
+});
+
 
 annotation_router.delete('/delete', [
     header('authorization').escape().notEmpty()
@@ -151,7 +196,7 @@ annotation_router.get('/get_all_by_type', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
         .contains('Bearer').withMessage('Authorization header must have Bearer'),
-    body('annon_type').escape().notEmpty().withMessage('annotation type is required')
+    check('type').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['bill', 'payment']).withMessage('annotation type must be bill or payment'),
 ], async (req: Request, res: Response) => {
     try {
@@ -160,9 +205,9 @@ annotation_router.get('/get_all_by_type', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { annon_type } = req.body;
+        const { type } = req.query;
 
-        const { data, error, status, message } = await annotation_controller.getAllType(user_id, annon_type);
+        const { data, error, status, message } = await annotation_controller.getAllType(user_id, type as AnnotationType);
         return res.status(status).json({ data, error, message });
     }
     catch (e) {
@@ -177,7 +222,7 @@ annotation_router.get('/get_all_by_status', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
         .contains('Bearer').withMessage('Authorization header must have Bearer'),
-    body('status').escape().notEmpty().withMessage('annotation type is required')
+    check('status').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
 ], async (req: Request, res: Response) => {
     try {
@@ -186,9 +231,9 @@ annotation_router.get('/get_all_by_status', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { status: annon_status } = req.body;
+        const { status: annon_status } = req.query;
 
-        const { data, error, status, message } = await annotation_controller.getAllStatus(user_id, annon_status);
+        const { data, error, status, message } = await annotation_controller.getAllStatus(user_id, annon_status as AnnotationStatus);
         return res.status(status).json({ data, error, message });
     }
     catch (e) {

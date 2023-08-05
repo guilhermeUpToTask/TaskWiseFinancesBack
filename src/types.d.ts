@@ -41,7 +41,7 @@ export type Annotation = {
     name: string,
     description: string,
     value: number,
-    date: 'string',
+    date: string,
     repeat: AnnotationRepeat, // on this we create a array if month create 12, if dayly create 31 or 30 if weakly create 4
     status: AnnotationStatus,
     annon_type_id?: number,
