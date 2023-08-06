@@ -70,6 +70,7 @@ const remove = async (
     try {
         const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_id, user_id }).select();
         if (error) throw error;
+        if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
 
         else {
             return { data, status: 200, error, message: 'sucessfully deleted Annotation' }

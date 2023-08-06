@@ -144,7 +144,7 @@ annotation_router.delete('/delete', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
         .contains('Bearer').withMessage('Authorization header must have Bearer'),
-    body('annotation_id').escape().notEmpty().withMessage('annotation_id is required')
+    check('annotation_id').escape().notEmpty().withMessage('annotation_id is required')
         .isInt().withMessage('annotation_id must be a number'),
 ], async (req: Request, res: Response) => {
     try {
@@ -153,7 +153,7 @@ annotation_router.delete('/delete', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { annotation_id } = req.body;
+        const annotation_id = parseInt(req.query.annotation_id as string, 10);
 
         const { data, error, status, message } = await annotation_controller
             .remove(annotation_id, user_id);
@@ -308,5 +308,38 @@ annotation_router.get('/get_all_from_month', [
         return res.status(status).json({ data, message, error });
     }
 });
+
+annotation_router.get('/get_all_warnings', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+    check('time_interval').notEmpty().withMessage('time_interval is required')
+        .isInt().withMessage('time_interval must be a integer number'),
+], async (req: Request, res: Response) => {
+    try {
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
+        const time_interval = parseInt(req.query.time_interval as string, 10);
+        const offsetDate= dayjs().add(time_interval as number, 'day').format('YYYY-MM-DD');
+
+        const { data, error, status, message } = await annotation_controller
+            .getAllPendentOrExpired(user_id, offsetDate);
+        return res.status(status).json({ data, error, message });
+    }
+    catch (e) {
+        console.error(`A Error Ocurred in annotation_router.ts get_all by type router!
+    TimeStamp: ${Date.now().toLocaleString('en-US')}
+    Error: ${e}`);
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, message, error });
+    }
+});
+
+
+
 
 export default annotation_router;
