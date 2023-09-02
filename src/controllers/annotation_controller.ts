@@ -68,11 +68,22 @@ const remove = async (
     user_id: string
 ): Promise<ServerResponse> => {
     try {
+
         const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_id, user_id }).select();
         if (error) throw error;
         if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
-
         else {
+            if (data[0].status === 'recived' || 'payed') {
+                const op_type = (data[0].status === 'recived') ? 'income' : 'expanse';
+                await wallet_op_controller
+                    .removeByAnnotation(
+                        user_id,
+                        annotation_id,
+                        op_type,
+                        data[0].value,
+                    )
+            }
+
             return { data, status: 200, error, message: 'sucessfully deleted Annotation' }
         }
     } catch (error) {
@@ -164,22 +175,22 @@ const confirmStatus = async (
             throw getNewResponseError('Annotation already confirmed', 400);
         }
         else if (status === 'expired' || status === 'pendent') {
-            const newStatus : AnnotationStatus= (annon_type === 'payment') ? 'recived' : 'payed';
+            const newStatus: AnnotationStatus = (annon_type === 'payment') ? 'recived' : 'payed';
 
             const { message: operationMessage } = await createOperationByStatus(
                 annotation_id, name, value, user_id, newStatus, annon_type);
 
-            const { data, error } = await supabase.from('annotations').update({ status:newStatus })
+            const { data, error } = await supabase.from('annotations').update({ status: newStatus })
                 .match({ id: annotation_id, user_id }).select();
             if (error)
                 throw error;
             else
-            return {
-                data, status: 200, error,
-                message: `Annotation: Sucessfully confirmed status 
+                return {
+                    data, status: 200, error,
+                    message: `Annotation: Sucessfully confirmed status 
                 Wallet Operation: ${operationMessage}
                 `
-            }
+                }
         }
     } catch (error) {
         console.error('error while selecting annotation status', error);
