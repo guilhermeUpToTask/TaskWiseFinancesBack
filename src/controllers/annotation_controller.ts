@@ -31,6 +31,7 @@ import supabase from '../supabase'
 import { ServerResponse, AnnotationType, Annotation, AnnotationStatus, AnnotationRepeat } from '../types'
 import { getNewResponseError } from '../error_system';
 import wallet_op_controller from './wallet_op_controller';
+import dayjs from 'dayjs';
 
 
 const create = async (
@@ -360,12 +361,54 @@ const getAllBetweenDates = async (
     }
 }
 
+const checkIfShouldBeExpired = (annotation: Annotation): boolean => {
+    const today = dayjs();
+    return (annotation.status === 'pendent' &&
+        dayjs(annotation.date).isBefore(today)
+    );
+}
+
+const checkForNewExpireds = (annotations: Annotation[]): boolean => {
+    return (annotations.filter(checkIfShouldBeExpired).length > 0);
+}
+
+const setBillsPendentsToExpired = async (
+    user_id: string,
+): Promise<ServerResponse> => {
+    try {
+        const { data, error } = await supabase.from('annotations')
+            .update({ status: 'expired' })
+            .match({
+                user_id,
+                status: 'pendent',
+                annon_type: 'bill'
+            })
+            .lte('date', dayjs().format('YYYY-MM-DD'));
+
+        if (error) throw error;
+
+        return {
+            data: data || [], status: 200, error: null,
+            message: 'sucessfully set pendents to expired'
+        }
+    } catch (error) {
+        console.error('error while setting pendents to expired', error);
+        throw error
+    }
+
+
+}
+
 const getAllPendentOrExpired = async (
     user_id: string,
-    offsetDate: string,
+    offsetDate?: string,
 ): Promise<ServerResponse> => {
     try {
         const { data } = await filterAnnotation(user_id, undefined, ['pendent', 'expired'], undefined, undefined, undefined, offsetDate);
+
+        if (checkForNewExpireds(data as Annotation[]))
+            await setBillsPendentsToExpired(user_id);
+
         return {
             data: data as Annotation[] || [], status: 200, error: null,
             message: 'sucessfully selected all pendent or expired in annotations'
