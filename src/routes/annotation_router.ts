@@ -324,7 +324,7 @@ annotation_router.get('/get_all_warnings', [
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
 
         const time_interval = parseInt(req.query.time_interval as string, 10);
-        const offsetDate= dayjs().add(time_interval as number, 'day').format('YYYY-MM-DD');
+        const offsetDate = dayjs().add(time_interval as number, 'day').format('YYYY-MM-DD');
 
         const { data, error, status, message } = await annotation_controller
             .getAllPendentOrExpired(user_id, offsetDate);
@@ -338,6 +338,38 @@ annotation_router.get('/get_all_warnings', [
         return res.status(status).json({ data, message, error });
     }
 });
+
+annotation_router.get('/get_all_warnings_for_date', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+    check('offset_date').notEmpty().withMessage('offset_date is required')
+        .isDate().withMessage('offset_date must be a date type'),
+], async (req: Request, res: Response) => {
+    try {
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
+        const offsetDate = req.query.offset_date as string;
+
+        const { data, error, status, message } = await annotation_controller
+            .getAllPendentOrExpired(user_id, offsetDate);
+        return res.status(status).json({ data, error, message });
+    }
+    catch (e) {
+        console.error(
+            `A Error Ocurred in annotation_router.ts get_all by type router!
+            TimeStamp: ${Date.now().toLocaleString('en-US')}
+            Error: ${e}`
+        );
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, message, error });
+    }
+});
+
 
 
 
