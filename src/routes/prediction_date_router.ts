@@ -50,11 +50,13 @@ prediction_date_router.put('/', [
             await prediction_date_controler.update(userID, current_date);
 
         return res.status(status).json({ data, message, error });
-        
+
     } catch (e) {
         const { data, status, message, error } = routerErrorHandler(e);
         return res.status(status).json({ data, message, error });
 
     }
 });
+
+export default prediction_date_router;
 
