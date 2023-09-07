@@ -5,6 +5,7 @@ import { Annotation, AnnotationStatus, AnnotationType, op_type, AnnotationRepeat
 import { routerErrorHandler } from '../error_system/index'
 import { body, header, validationResult, matchedData, check } from 'express-validator';
 import annotation_controller from '../controllers/annotation_controller';
+import prediction_date_controler from '../controllers/prediction_date_controler';
 
 import { getFirstAndLastDayOfMonth } from '../lib/functions/date';
 
@@ -340,12 +341,10 @@ annotation_router.get('/get_all_warnings', [
     }
 });
 
-annotation_router.get('/get_all_warnings_for_date', [
+annotation_router.get('/get_all_warnings_for_prediction_date', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
         .contains('Bearer').withMessage('Authorization header must have Bearer'),
-    check('offset_date').notEmpty().withMessage('offset_date is required')
-        .isDate().withMessage('offset_date must be a date type'),
 ], async (req: Request, res: Response) => {
     try {
         validationResult(req).throw();
@@ -354,7 +353,7 @@ annotation_router.get('/get_all_warnings_for_date', [
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
 
-        const offsetDate = req.query.offset_date as string;
+        const { data: offsetDate } = await prediction_date_controler.get(user_id);
 
         const { data, error, status, message } = await annotation_controller
             .getAllPendentOrExpired(user_id, offsetDate);
@@ -362,7 +361,7 @@ annotation_router.get('/get_all_warnings_for_date', [
     }
     catch (e) {
         console.error(
-            `A Error Ocurred in annotation_router.ts get_all by type router!
+            `A Error Ocurred in annotation_router.ts get_all by preditcion date router!
             TimeStamp: ${Date.now().toLocaleString('en-US')}
             Error: ${e}`
         );
