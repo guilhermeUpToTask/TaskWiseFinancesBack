@@ -78,7 +78,8 @@ annotation_router.put('/update', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { id, name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } = req.body;
+        const { id, name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } =
+            req.body;
 
         const { data, error, status, message } = await annotation_controller
             .update(id, user_id, name, description, value, date, repeat, annon_status, annon_type, annon_type_id);
