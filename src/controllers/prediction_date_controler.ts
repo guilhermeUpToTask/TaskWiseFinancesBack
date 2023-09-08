@@ -30,7 +30,7 @@ const get = async (user_id: string): Promise<ServerResponse> => {
                 return await create(user_id);
             }
             else
-                return { data: data[0], status: 200, error, message: 'sucessfully got prediction date' }
+                return { data: data[0].current_date as string, status: 200, error, message: 'sucessfully got prediction date' }
         }
 
     } catch (error) {
