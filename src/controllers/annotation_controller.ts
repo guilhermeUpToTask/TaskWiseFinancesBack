@@ -64,6 +64,23 @@ const create = async (
     }
 }
 
+const bulkCreate =async (annotations: Annotation[]): Promise<ServerResponse> => {
+    try {
+        const { data, error } = await supabase.from('annotations').insert(annotations);
+        if (error)
+            throw error;
+        else {
+            return {
+                data, status: 201, error: null, message: 'sucessfully created Annotation'
+            }
+        }
+
+    } catch (error) {
+        console.error('error while creating Annotation', error);
+        throw error
+    }
+} 
+
 const remove = async (
     annotation_id: number,
     user_id: string
@@ -80,6 +97,34 @@ const remove = async (
                     .removeByAnnotation(
                         user_id,
                         annotation_id,
+                        op_type,
+                        data[0].value,
+                    )
+            }
+
+            return { data, status: 200, error, message: 'sucessfully deleted Annotation' }
+        }
+    } catch (error) {
+        console.error('error while deleting Annotation', error);
+        throw error
+    }
+}
+
+const bulkRemove = async (
+    annotation_ids : number[],
+    user_id : string
+): Promise<ServerResponse> => {
+    try {
+        const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_ids, user_id }).select();
+        if (error) throw error;
+        if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
+        else {
+            if (data[0].status === 'recived' || 'payed') {
+                const op_type = (data[0].status === 'recived') ? 'income' : 'expanse';
+                await wallet_op_controller
+                    .removeByAnnotation(
+                        user_id,
+                        annotation_ids[0],
                         op_type,
                         data[0].value,
                     )
