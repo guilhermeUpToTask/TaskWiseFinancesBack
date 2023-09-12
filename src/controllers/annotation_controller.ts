@@ -64,7 +64,7 @@ const create = async (
     }
 }
 
-const bulkCreate =async (annotations: Annotation[]): Promise<ServerResponse> => {
+const bulkCreate = async (annotations: Annotation[]): Promise<ServerResponse> => {
     try {
         const { data, error } = await supabase.from('annotations').insert(annotations);
         if (error)
@@ -79,7 +79,7 @@ const bulkCreate =async (annotations: Annotation[]): Promise<ServerResponse> => 
         console.error('error while creating Annotation', error);
         throw error
     }
-} 
+}
 
 const remove = async (
     annotation_id: number,
@@ -110,30 +110,47 @@ const remove = async (
     }
 }
 
+
+const reduceCheckedAnnotations = (annotations: Annotation[]): { ids: number[], value: number } => {
+    return annotations.reduce((acc, curr) => {
+
+        if (['recived', 'payed'].includes(curr.status)) {
+            console.log(curr);
+            return {
+                ids: [...acc.ids, curr.id],
+                value: (curr.annon_type === 'payment') ? acc.value + curr.value :
+                    acc.value - curr.value
+            }
+        } else {
+            return acc;
+        }
+
+    }, { ids: [], value: 0 })
+}
 const bulkRemove = async (
-    annotation_ids : number[],
-    user_id : string
+    user_id: string,
+    annotation_ids: number[],
 ): Promise<ServerResponse> => {
     try {
-        const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_ids, user_id }).select();
+        const { data, error } = await supabase.from('annotations')
+        .delete()
+        .match({user_id })
+        .in('id', annotation_ids)
+        .select();
+
         if (error) throw error;
         if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
+
         else {
-            if (data[0].status === 'recived' || 'payed') {
-                const op_type = (data[0].status === 'recived') ? 'income' : 'expanse';
-                await wallet_op_controller
-                    .removeByAnnotation(
-                        user_id,
-                        annotation_ids[0],
-                        op_type,
-                        data[0].value,
-                    )
+            const reduceResult = reduceCheckedAnnotations(data as Annotation[]);
+            if(reduceResult.ids.length > 0) {
+                wallet_op_controller.removeByBulkAnnotation(user_id, reduceResult);
             }
 
-            return { data, status: 200, error, message: 'sucessfully deleted Annotation' }
+            return { data, status: 200, error, message: 'sucessfully bulk deleted Annotations' }
         }
     } catch (error) {
-        console.error('error while deleting Annotation', error);
+        console.error('error while bulk deleting Annotations', error);
         throw error
     }
 }
@@ -467,6 +484,7 @@ const getAllPendentOrExpired = async (
 export default {
     create,
     remove,
+    bulkRemove,
     update,
     confirmStatus,
     get,

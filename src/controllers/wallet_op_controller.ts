@@ -108,6 +108,33 @@ const removeByAnnotation = async (
     }
 }
 
+const removeByBulkAnnotation = async (
+    user_id: string,
+    reduceResult: { ids: number[], value: number }
+): Promise<ServerResponse> => {
+    try {
+        (reduceResult.value > 0) ? await wallet_controller.add(user_id, reduceResult.value) :
+            await wallet_controller.subtract(user_id, reduceResult.value);
+
+        const { data, error } = await supabase.from('wallet_operations')
+            .delete().in('annotation_id', reduceResult.ids);
+
+        if (error)
+            throw error;
+        else {
+            return {
+                data,
+                status: 200,
+                error,
+                message: 'sucessfully deleted wallet operation by bulk remove from annotation'
+            }
+        }
+
+    } catch (error) {
+        console.error('error while deleting wallet operation by bulk remove from annotation', error);
+        throw error
+    }
+}
 
 const filterWalletOperations = async (
     user_id: string,
@@ -181,6 +208,7 @@ export default {
     create,
     remove,
     removeByAnnotation,
+    removeByBulkAnnotation,
     filterWalletOperations,
     getAll,
     getAllType,

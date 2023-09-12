@@ -2,7 +2,7 @@ import express, { Request, Response, query } from 'express';
 import dayjs from 'dayjs'
 import user_controller from '../controllers/user_controller';
 import { Annotation, AnnotationStatus, AnnotationType, op_type, AnnotationRepeat } from '../types';
-import { routerErrorHandler } from '../error_system/index'
+import { getNewResponseError, routerErrorHandler } from '../error_system/index'
 import { body, header, validationResult, matchedData, check } from 'express-validator';
 import annotation_controller from '../controllers/annotation_controller';
 import prediction_date_controler from '../controllers/prediction_date_controler';
@@ -169,6 +169,52 @@ annotation_router.delete('/delete', [
         return res.status(status).json({ data, message, error });
     }
 });
+
+annotation_router.delete('/bulk_delete', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+    check('annotation_ids').escape().notEmpty().withMessage('annotation_ids is required')
+], async (req: Request, res: Response) => {
+    try {
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
+        const annotation_ids = JSON.parse(req.query.annotation_ids as string) as string[];
+
+        const new_ann_ids: number[] = [];
+
+        annotation_ids.forEach(a => {
+            const parsedValue = parseInt(a, 10);
+            if (!Number.isNaN(parsedValue)) {
+                new_ann_ids.push(parsedValue);
+            } else {
+                throw getNewResponseError('annotation_ids must be an array of numbers'
+                    , 400);
+            }
+        });
+
+        console.log(new_ann_ids);
+
+
+        //    const { data, error, status, message } = await annotation_controller
+        //      .bulkRemove(user_id, annotation_ids,);
+
+        //return res.status(status).json({ data, error, message });
+        return res.status(200).json({ data: [], error: '', message: '' });
+    }
+    catch (e) {
+        console.error(`A Error Ocurred in annotation_router.ts delete router!
+    TimeStamp: ${Date.now().toLocaleString('en-US')}
+    Error: ${e}`);
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, message, error });
+    }
+});
+
 
 annotation_router.get('/get_all', [
     header('authorization').escape().notEmpty()
@@ -369,8 +415,6 @@ annotation_router.get('/get_all_warnings_for_prediction_date', [
         return res.status(status).json({ data, message, error });
     }
 });
-
-
 
 
 
