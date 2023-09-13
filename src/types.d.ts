@@ -32,7 +32,7 @@ interface op_map {
 }
 export type AnnotationType = 'bill' | 'payment';
 export type AnnotationStatus = 'pendent' | 'expired' | 'payed' | 'recived';
-export type AnnotationRepeat = 'never' | 'daily' | 'weekly' | 'monthly';
+export type AnnotationRepeat = 'never' | 'day' | 'week' | 'month';
 
 export type Annotation = {
     id: number,
@@ -46,3 +46,5 @@ export type Annotation = {
     status: AnnotationStatus,
     annon_type_id?: number,
 }
+
+export type NewAnnotation = Omit<Annotation, 'id'>;

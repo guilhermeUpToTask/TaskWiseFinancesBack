@@ -28,7 +28,7 @@ Here's a suggested refactoring for the getAll and getAllType functions to make t
 
 
 import supabase from '../supabase'
-import { ServerResponse, AnnotationType, Annotation, AnnotationStatus, AnnotationRepeat } from '../types'
+import { ServerResponse, AnnotationType, Annotation, AnnotationStatus, AnnotationRepeat, NewAnnotation } from '../types'
 import { getNewResponseError } from '../error_system';
 import wallet_op_controller from './wallet_op_controller';
 import dayjs from 'dayjs';
@@ -64,19 +64,19 @@ const create = async (
     }
 }
 
-const bulkCreate = async (annotations: Annotation[]): Promise<ServerResponse> => {
+const bulkCreate = async (annotations: NewAnnotation[]): Promise<ServerResponse> => {
     try {
-        const { data, error } = await supabase.from('annotations').insert(annotations);
+        const { data, error } = await supabase.from('annotations').insert(annotations).select();
         if (error)
             throw error;
         else {
             return {
-                data, status: 201, error: null, message: 'sucessfully created Annotation'
+                data, status: 201, error: null, message: 'sucessfully bulk created Annotation'
             }
         }
 
     } catch (error) {
-        console.error('error while creating Annotation', error);
+        console.error('error while bulk creating Annotation', error);
         throw error
     }
 }
@@ -483,6 +483,7 @@ const getAllPendentOrExpired = async (
 
 export default {
     create,
+    bulkCreate,
     remove,
     bulkRemove,
     update,

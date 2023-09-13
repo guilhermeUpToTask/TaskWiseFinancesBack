@@ -113,8 +113,7 @@ const removeByBulkAnnotation = async (
     reduceResult: { ids: number[], value: number }
 ): Promise<ServerResponse> => {
     try {
-        (reduceResult.value > 0) ? await wallet_controller.add(user_id, reduceResult.value) :
-            await wallet_controller.subtract(user_id, reduceResult.value);
+        await wallet_controller.add(user_id, reduceResult.value);
 
         const { data, error } = await supabase.from('wallet_operations')
             .delete().in('annotation_id', reduceResult.ids);

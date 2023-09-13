@@ -1,11 +1,15 @@
 import express, { Request, Response, query } from 'express';
 import dayjs from 'dayjs'
 import user_controller from '../controllers/user_controller';
-import { Annotation, AnnotationStatus, AnnotationType, op_type, AnnotationRepeat } from '../types';
+import { Annotation, AnnotationStatus, AnnotationType, op_type, AnnotationRepeat, NewAnnotation } from '../types';
+import { parseArrOfStrToInt } from '../lib/functions/commun_fns';
+import { getRepeatedAnnotations } from '../lib/functions/annotation_fns';
 import { getNewResponseError, routerErrorHandler } from '../error_system/index'
-import { body, header, validationResult, matchedData, check } from 'express-validator';
+import { body, header, validationResult, check } from 'express-validator';
 import annotation_controller from '../controllers/annotation_controller';
 import prediction_date_controler from '../controllers/prediction_date_controler';
+
+
 
 import { getFirstAndLastDayOfMonth } from '../lib/functions/date';
 
@@ -23,7 +27,7 @@ annotation_router.post('/create', [
     body('status').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
     body('repeat').escape().notEmpty().withMessage('annotation type is required')
-        .isIn(['never', 'daily', 'weekly', 'monthly']).withMessage('invalid annotation repeat'),
+        .isIn(['never', 'day', 'week', 'month', 'year']).withMessage('invalid annotation repeat'),
     body('date').notEmpty().withMessage('date is required')
         .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
     body('annon_type').escape().notEmpty().withMessage('annotation type is required')
@@ -52,6 +56,68 @@ annotation_router.post('/create', [
         return res.status(status).json({ data, error, message });
     }
 });
+
+annotation_router.post('/bulk_create', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+    body('name').escape().notEmpty().withMessage('annotation name is required'),
+    body('value').escape().notEmpty().withMessage('annotation value is required')
+        .isNumeric().withMessage('annotation value must be a number').toFloat(),
+    body('description').escape().notEmpty().withMessage('annotation description is required')
+        .isString().withMessage('annotation description must be a string'),
+    body('status').escape().notEmpty().withMessage('annotation type is required')
+        .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
+    body('repeat').escape().notEmpty().withMessage('annotation type is required')
+        .isIn(['never', 'day', 'week', 'month', 'year']).withMessage('invalid annotation repeat'),
+    body('date').notEmpty().withMessage('date is required')
+        .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
+    body('annon_type').escape().notEmpty().withMessage('annotation type is required')
+        .isIn(['bill', 'payment']).withMessage('annotation type must be bill or payment'),
+    body('annon_type_id').escape().toInt(),
+    body('quantity').escape().notEmpty().withMessage('quantity is required')
+        .isNumeric().withMessage('quantity must be a number').toInt(),
+], async (req: Request, res: Response) => {
+    try {
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
+        const {
+            name,
+            description,
+            value,
+            repeat,
+            status: annon_status,
+            date,
+            annon_type,
+            annon_type_id,
+            quantity
+        } = req.body;
+
+        const repeatedAnnotations: NewAnnotation[] = getRepeatedAnnotations({
+            name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id, user_id,
+        } as NewAnnotation,
+            quantity,
+        );
+
+        const { data, error, status, message } = await annotation_controller
+            .bulkCreate(repeatedAnnotations);
+
+        return res.status(status).json({ data, error, message });
+    }
+    catch (e) {
+        console.error(`A Error Ocurred in annotation_router.ts bulk create post router!
+        TimeStamp: ${Date.now().toLocaleString('en-US')}
+        Error: ${e}`);
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, error, message });
+    }
+});
+
+
 annotation_router.put('/update', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
@@ -64,7 +130,7 @@ annotation_router.put('/update', [
     body('status').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
     body('repeat').escape().notEmpty().withMessage('annotation type is required')
-        .isIn(['never', 'daily', 'weekly', 'monthly']).withMessage('invalid annotation repeat '),
+        .isIn(['never', 'day', 'week', 'month', 'year']).withMessage('invalid annotation repeat '),
     body('date').notEmpty().withMessage('date is required')
         .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
     body('id').escape().notEmpty().withMessage('annotation id is required')
@@ -183,31 +249,18 @@ annotation_router.delete('/bulk_delete', [
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
 
-        const annotation_ids = JSON.parse(req.query.annotation_ids as string) as string[];
+        const annotation_ids_str = JSON.parse(req.query.annotation_ids as string) as string[];
 
-        const new_ann_ids: number[] = [];
+        const annotation_ids_num: number[] = parseArrOfStrToInt(annotation_ids_str);
 
-        annotation_ids.forEach(a => {
-            const parsedValue = parseInt(a, 10);
-            if (!Number.isNaN(parsedValue)) {
-                new_ann_ids.push(parsedValue);
-            } else {
-                throw getNewResponseError('annotation_ids must be an array of numbers'
-                    , 400);
-            }
-        });
+        const { data, error, status, message } = await annotation_controller
+            .bulkRemove(user_id, annotation_ids_num,);
 
-        console.log(new_ann_ids);
+        return res.status(status).json({ data, error, message });
 
-
-        //    const { data, error, status, message } = await annotation_controller
-        //      .bulkRemove(user_id, annotation_ids,);
-
-        //return res.status(status).json({ data, error, message });
-        return res.status(200).json({ data: [], error: '', message: '' });
     }
     catch (e) {
-        console.error(`A Error Ocurred in annotation_router.ts delete router!
+        console.error(`A Error Ocurred in annotation_router.ts bulk delete router!
     TimeStamp: ${Date.now().toLocaleString('en-US')}
     Error: ${e}`);
         const { data, status, message, error } = routerErrorHandler(e);
