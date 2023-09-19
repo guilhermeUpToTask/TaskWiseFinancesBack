@@ -6,7 +6,7 @@
   "scripts": {
     "test": "test",
     "build": "tsc",
-    "start": "tsc  nodemon dist/index.js",
+    "start": "tsc  nodemon dist/index.ts",
     "vercel-build": "echo hello"
   },
   "keywords": [

@@ -221,16 +221,22 @@ annotation_router.delete('/delete', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
         const annotation_id = parseInt(req.query.annotation_id as string, 10);
 
         const { data, error, status, message } = await annotation_controller
             .remove(annotation_id, user_id);
+
         return res.status(status).json({ data, error, message });
+
     }
     catch (e) {
-        console.error(`A Error Ocurred in annotation_router.ts delete router!
-    TimeStamp: ${Date.now().toLocaleString('en-US')}
-    Error: ${e}`);
+        console.error(
+        `A Error Ocurred in annotation_router.ts delete router!
+        TimeStamp: ${Date.now().toLocaleString('en-US')}
+        Error: ${e}`
+        );
+
         const { data, status, message, error } = routerErrorHandler(e);
         return res.status(status).json({ data, message, error });
     }

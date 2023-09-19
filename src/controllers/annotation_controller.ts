@@ -87,23 +87,25 @@ const remove = async (
 ): Promise<ServerResponse> => {
     try {
 
-        const { data, error } = await supabase.from('annotations').delete().match({ id: annotation_id, user_id }).select();
+        const { data, error } = await supabase.from('annotations')
+            .delete().match({ id: annotation_id, user_id }).select();
+
         if (error) throw error;
         if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
-        else {
-            if (data[0].status === 'recived' || 'payed') {
-                const op_type = (data[0].status === 'recived') ? 'income' : 'expanse';
-                await wallet_op_controller
-                    .removeByAnnotation(
-                        user_id,
-                        annotation_id,
-                        op_type,
-                        data[0].value,
-                    )
-            }
 
-            return { data, status: 200, error, message: 'sucessfully deleted Annotation' }
+        if (data[0].status === 'recived' || data[0].status === 'payed') {
+            const op_type = (data[0].status === 'recived') ? 'income' : 'expanse';
+            await wallet_op_controller
+                .removeByAnnotation(
+                    user_id,
+                    annotation_id,
+                    op_type,
+                    data[0].value,
+                )
         }
+
+        return { data, status: 200, error, message: 'sucessfully deleted Annotation' }
+
     } catch (error) {
         console.error('error while deleting Annotation', error);
         throw error
@@ -133,17 +135,17 @@ const bulkRemove = async (
 ): Promise<ServerResponse> => {
     try {
         const { data, error } = await supabase.from('annotations')
-        .delete()
-        .match({user_id })
-        .in('id', annotation_ids)
-        .select();
+            .delete()
+            .match({ user_id })
+            .in('id', annotation_ids)
+            .select();
 
         if (error) throw error;
         if (data.length === 0) throw getNewResponseError('Annotation to delete not found', 404);
 
         else {
             const reduceResult = reduceCheckedAnnotations(data as Annotation[]);
-            if(reduceResult.ids.length > 0) {
+            if (reduceResult.ids.length > 0) {
                 wallet_op_controller.removeByBulkAnnotation(user_id, reduceResult);
             }
 
