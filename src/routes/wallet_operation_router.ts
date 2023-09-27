@@ -52,12 +52,8 @@ wallet_operation_router.delete('/delete', [
     header('authorization').escape().notEmpty()
         .withMessage('Authorization header is required')
         .contains('Bearer').withMessage('Authorization header must have Bearer'),
-    body('operation_id').escape().notEmpty().withMessage('Operation_id is required')
-        .isInt().withMessage('operation_id must be a Integer').toInt(),
-    body('value').escape().notEmpty().withMessage('value is required')
-        .isNumeric().withMessage('operation.value must be a number').toFloat(),
-    body('operation_type').escape().notEmpty().withMessage('operation_type is required')
-        .isIn(['income', 'expense']).withMessage('operation_type must be income or expense'),
+    check('operation_id').escape().notEmpty().withMessage('Operation_id is required')
+        .isInt().withMessage('operation_id must be a Integer'),
 ], async (req: Request, res: Response) => {
     try {
         validationResult(req).throw();
@@ -66,10 +62,12 @@ wallet_operation_router.delete('/delete', [
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
 
-        const { operation_id } = req.body;
+        const operation_id = parseInt(req.query.operation_id as string, 10);
 
         const { data, error, status, message } = await wallet_op_controller.remove(
-            user_id, operation_id as number);
+            user_id, operation_id);
+
+
         return res.status(status).json({ data, error, message });
         //delete implementation
     } catch (e) {

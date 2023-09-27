@@ -76,10 +76,11 @@ const remove = async (
     user_id: string, operation_id: number
 ): Promise<ServerResponse> => {
     try {
-        const { data: { value, operation_type } } = await get(operation_id, user_id);
-        await op_delete_map[operation_type as op_type](user_id, value);
+
         const { data, error } = await supabase.from('wallet_operations').delete()
-            .match({ id: operation_id, user_id })
+            .match({ id: operation_id, user_id }).select();
+
+        await op_delete_map[data[0].operation_type as op_type](user_id, data[0].value);
 
         return { data, status: 200, error, message: 'sucessfully deleted wallet operation' }
 
