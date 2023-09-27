@@ -22,9 +22,10 @@ export type Operation = {
     description: string,
     user_id: string,
     wallet_id: number,
+    annotation_id?: number,
     operation_type: op_type,
     operation_type_id: number | undefined,
-    date: string
+    date: string,
 }
 interface op_map {
     [key: string]: (user_id: string, value: number) => Promise<ServerResponse>;

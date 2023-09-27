@@ -4,6 +4,7 @@ import { getNewResponseError } from '../error_system';
 import supabase from '../supabase'
 import { ServerResponse, op_type, Operation, op_map } from '../types'
 import wallet_controller from './wallet_controller';
+import annotation_controller from './annotation_controller';
 
 enum OperationType {
     Expanse = 'expanse',
@@ -81,14 +82,41 @@ const remove = async (
             .match({ id: operation_id, user_id }).select();
 
         await op_delete_map[data[0].operation_type as op_type](user_id, data[0].value);
+        if (error)
+            throw error;
 
-        return { data, status: 200, error, message: 'sucessfully deleted wallet operation' }
+        if (data[0].annotation_id) {
+           await updateAnnByRemoveOp(user_id, data[0].annotation_id)
+        }
+
+        return { data: data[0] as Operation, status: 200, error, message: 'sucessfully deleted wallet operation' }
 
     } catch (error) {
         console.error('error while deleting wallet operation', error);
         throw error
     }
 }
+
+const updateAnnByRemoveOp = async (user_id: string, annotation_id: number): Promise<ServerResponse> => {
+    try {
+        const { data, error } = await annotation_controller.get(user_id, annotation_id);
+
+        if (error)
+            throw error;
+        if (!data)
+            throw getNewResponseError('annotation not Found', 404);
+
+        await annotation_controller.uncheckStatus(user_id, annotation_id)
+
+        return { data, status: 200, error, message: 'sucessfully updated annotation' }
+
+    } catch (error) {
+        console.error('error while updating annotation by operation', error);
+        throw error
+    }
+}
+
+
 //need to analys
 const removeByAnnotation = async (
     user_id: string, annotation_id: number,

@@ -194,6 +194,33 @@ const update = async (
         throw error
     }
 }
+const uncheckStatus = async (
+    user_id: string,
+    annotation_id: number,
+
+): Promise<ServerResponse> => {
+    try {
+
+        const { error, data } = await supabase.from('annotations').update(
+            { status: 'pendent' })
+            .match({ id: annotation_id, user_id: user_id }).select();
+        if (error) throw error;
+
+        else {
+            return {
+                data, status: 200, error,
+                message: `Annotation: Sucessfully unchecked 
+                `
+            }
+        }
+
+    } catch (error) {
+        console.error('error while unchecking Annotation', error);
+        throw error
+    }
+}
+
+
 const get = async (
     user_id: string,
     annotation_id: number
@@ -203,7 +230,7 @@ const get = async (
         if (error)
             throw error;
         else
-            return { data: data[0] || [], status: 200, error, message: 'sucessfully selected  annotation' }
+            return { data: data[0] as Annotation || [], status: 200, error, message: 'sucessfully selected  annotation' }
 
     } catch (error) {
         console.error('error while selecting annotation', error);
@@ -489,6 +516,7 @@ export default {
     remove,
     bulkRemove,
     update,
+    uncheckStatus,
     confirmStatus,
     get,
     filterAnnotation,
