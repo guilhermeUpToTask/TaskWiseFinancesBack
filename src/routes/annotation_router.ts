@@ -475,6 +475,31 @@ annotation_router.get('/get_all_warnings_for_prediction_date', [
     }
 });
 
+annotation_router.get('/all', [
+    header('authorization').escape().notEmpty()
+        .withMessage('Authorization header is required')
+        .contains('Bearer').withMessage('Authorization header must have Bearer'),
+], async (req: Request, res: Response) => {
+    try {
+        validationResult(req).throw();
+
+        const { headers: { authorization }, } = req;
+        const userJWT = authorization?.split(' ')[1] || '';
+        const user_id = await user_controller.getUserIDFromJWT(userJWT);
+
+        const { data, error, status, message } = await annotation_controller
+            .getAll(user_id)
+        return res.status(status).json({ data, error, message });
+    }
+    catch (e) {
+        console.error(`A Error Ocurred in annotation_router.ts get_all!
+    TimeStamp: ${Date.now().toLocaleString('en-US')}
+    Error: ${e}`);
+        const { data, status, message, error } = routerErrorHandler(e);
+        return res.status(status).json({ data, message, error });
+    }
+});
+
 
 
 export default annotation_router;
