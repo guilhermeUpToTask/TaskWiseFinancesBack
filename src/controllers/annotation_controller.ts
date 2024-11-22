@@ -28,7 +28,7 @@ Here's a suggested refactoring for the getAll and getAllType functions to make t
 
 
 import supabase from '../supabase'
-import { ServerResponse, AnnotationType, Annotation, AnnotationStatus, AnnotationRepeat, NewAnnotation } from '../types'
+import { ServerResponse, AnnotationType, Annotation, AnnotationStatus, AnnotationRepeat, NewAnnotation, AnnotationV2 } from '../types'
 import { getNewResponseError } from '../error_system';
 import wallet_op_controller from './wallet_op_controller';
 import dayjs from 'dayjs';
@@ -436,7 +436,7 @@ const getAllStatus = async (
 }
 
 export interface GroupedResponse {
-    [date: string]: Annotation[]
+    [date: string]: AnnotationV2[]
 }
 
 const getAllBetweenDates = async (
@@ -446,7 +446,7 @@ const getAllBetweenDates = async (
 ): Promise<ServerResponse> => {
     try {
         const { data } = await filterAnnotation(user_id, undefined, undefined, undefined, undefined, startDate, endDate);
-        const annotations = data as Annotation[]
+        const annotations = data as AnnotationV2[]
 
         // Group annotations by date
         const groupedData: GroupedResponse = annotations.reduce((acc, annotation) => {
