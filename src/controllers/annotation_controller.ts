@@ -435,6 +435,10 @@ const getAllStatus = async (
     }
 }
 
+export interface GroupedResponse {
+    [date: string]: Annotation[]
+}
+
 const getAllBetweenDates = async (
     user_id: string,
     startDate: string,
@@ -442,8 +446,21 @@ const getAllBetweenDates = async (
 ): Promise<ServerResponse> => {
     try {
         const { data } = await filterAnnotation(user_id, undefined, undefined, undefined, undefined, startDate, endDate);
+        const annotations = data as Annotation[]
+
+        // Group annotations by date
+        const groupedData: GroupedResponse = annotations.reduce((acc, annotation) => {
+            const dateKey = annotation.date; // Extract the annotation's date as a key
+            if (!acc[dateKey]) {            // Check if the dateKey does not already exist in the accumulator
+                acc[dateKey] = [];          // If not, initialize it as an empty array
+            }
+            acc[dateKey].push(annotation);  // Add the annotation to the corresponding array
+            return acc;                     // Return the accumulator for the next iteration
+        }, {} as GroupedResponse);          // Initialize the accumulator as an empty object of type GroupedResponse
+
+
         return {
-            data: data as Annotation[] || [], status: 200, error: null,
+            data: groupedData || [], status: 200, error: null,
             message: 'sucessfully selected all between dates in annotations'
         }
     } catch (error) {

@@ -379,7 +379,7 @@ annotation_router.get('/get_all_between_dates', [
         TimeStamp: ${Date.now().toLocaleString('en-US')}
         Error: ${e}`);
         const { data, status, message, error } = routerErrorHandler(e);
-        return res.status(status).json({ data, message, error });
+        return res.status(status).json({ data, error, message });
     }
 });
 
