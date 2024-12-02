@@ -30,9 +30,8 @@ annotation_router.post('/create', [
         .isIn(['never', 'day', 'week', 'month', 'year']).withMessage('invalid annotation repeat'),
     body('date').notEmpty().withMessage('date is required')
         .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
-    body('annon_type').escape().notEmpty().withMessage('annotation type is required')
+    body('type').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['bill', 'payment']).withMessage('annotation type must be bill or payment'),
-    body('annon_type_id').escape().toInt(),
 ], async (req: Request, res: Response) => {
     try {
         validationResult(req).throw();
@@ -40,10 +39,10 @@ annotation_router.post('/create', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } = req.body;
+        const { name, description, value, repeat, status: annon_status, date, type } = req.body;
 
         const { data, error, status, message } = await annotation_controller
-            .create(user_id, name, description, value, repeat, annon_status, date, annon_type, annon_type_id);
+            .create(user_id, name, description, value, repeat, annon_status, date, type);
 
         //we should not return user_id back to client...
         return res.status(status).json({ data, error, message });

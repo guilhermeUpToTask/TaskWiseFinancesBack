@@ -34,11 +34,11 @@ const supabase_1 = __importDefault(require("../supabase"));
 const error_system_1 = require("../error_system");
 const wallet_op_controller_1 = __importDefault(require("./wallet_op_controller"));
 const dayjs_1 = __importDefault(require("dayjs"));
-const create = async (user_id, name, description, value, repeat, status, date, annon_type, annon_type_id) => {
+const create = async (user_id, name, description, value, repeat, status, date, type) => {
     try {
         const { error, data } = await supabase_1.default.from('annotations')
             .insert({
-            user_id, annon_type_id, annon_type, name, description, value, date, repeat, status,
+            user_id, type, name, description, value, date, repeat, status,
         }).select();
         if (error)
             throw error;

@@ -42,13 +42,12 @@ const create = async (
     repeat: AnnotationRepeat,
     status: AnnotationStatus,
     date: 'string',
-    annon_type: AnnotationType,
-    annon_type_id?: number,
+    type: AnnotationType,
 ): Promise<ServerResponse> => {
     try {
         const { error, data } = await supabase.from('annotations')
             .insert({
-                user_id, annon_type_id, annon_type, name, description, value, date, repeat, status,
+                user_id, type, name, description, value, date, repeat, status,
             }).select();
         if (error)
             throw error;
