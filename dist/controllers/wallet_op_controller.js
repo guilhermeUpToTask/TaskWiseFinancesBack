@@ -21,17 +21,17 @@ const op_delete_map = {
     [OperationType.Income]: (user_id, value) => wallet_controller_1.default.subtract(user_id, value),
     [OperationType.Expanse]: (user_id, value) => wallet_controller_1.default.add(user_id, value)
 };
-const create = async (name, value, description, operation_type, user_id, operation_type_id, annotation_id) => {
+const create = async (name, value, description, type, user_id, annotation_id) => {
     try {
         const currentDate = (0, dayjs_1.default)().format('YYYY-MM-DD');
-        await op_create_map[operation_type](user_id, value);
+        await op_create_map[type](user_id, value);
         const { error } = await supabase_1.default.from('wallet_operations')
-            .insert({ name, user_id, value, description, operation_type, operation_type_id, date: currentDate, annotation_id });
+            .insert({ name, user_id, value, description, type, date: currentDate, annotation_id });
         if (error)
             throw error;
         else {
             return {
-                data: { name, user_id, value, description, operation_type, operation_type_id, date: currentDate },
+                data: { name, user_id, value, description, type, date: currentDate },
                 status: 201, error, message: 'sucessfully created wallet'
             };
         }

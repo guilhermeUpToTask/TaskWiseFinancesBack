@@ -12,7 +12,7 @@ app.use(cors({ credentials: true, origin: true }));
 
 // Add your routes here
 app.use('/wallet', wallet_router);
-app.use('/wallet_operation', wallet_operation_router);
+app.use('/operation', wallet_operation_router);
 app.use('/annotation', annotation_router);
 app.use('/prediction_date', prediction_date_router);
 

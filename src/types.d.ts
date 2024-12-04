@@ -23,8 +23,7 @@ export type Operation = {
     user_id: string,
     wallet_id: number,
     annotation_id?: number,
-    operation_type: op_type,
-    operation_type_id: number | undefined,
+    type: op_type,
     date: string,
 }
 interface op_map {

@@ -129,10 +129,10 @@ const bulkRemove = async (user_id, annotation_ids) => {
     }
 };
 //change to object into route
-const update = async (annotation_id, user_id, name, description, value, date, repeat, status, annon_type, annon_type_id) => {
+const update = async (annotation_id, user_id, name, description, value, date, repeat, status, type) => {
     try {
-        const { message: operationMessage } = await createOperationByStatus(annotation_id, name, value, user_id, status, annon_type);
-        const { error, data } = await supabase_1.default.from('annotations').update({ user_id, annon_type_id, annon_type, name, description, value, date, repeat, status })
+        const { message: operationMessage } = await createOperationByStatus(annotation_id, name, value, user_id, status, type);
+        const { error, data } = await supabase_1.default.from('annotations').update({ user_id, type, name, description, value, date, repeat, status })
             .match({ id: annotation_id, user_id: user_id }).select();
         if (error)
             throw error;
@@ -197,14 +197,14 @@ const getStatus = async (user_id, annotation_id) => {
         throw error;
     }
 };
-const confirmStatus = async (user_id, annotation_id, name, value, status, annon_type) => {
+const confirmStatus = async (user_id, annotation_id, name, value, status, type) => {
     try {
         if (status === 'payed' || status === 'recived') {
             throw (0, error_system_1.getNewResponseError)('Annotation already confirmed', 400);
         }
         else if (status === 'expired' || status === 'pendent') {
-            const newStatus = (annon_type === 'payment') ? 'recived' : 'payed';
-            const { message: operationMessage } = await createOperationByStatus(annotation_id, name, value, user_id, newStatus, annon_type);
+            const newStatus = (type === 'payment') ? 'recived' : 'payed';
+            const { message: operationMessage } = await createOperationByStatus(annotation_id, name, value, user_id, newStatus, type);
             const { data, error } = await supabase_1.default.from('annotations').update({ status: newStatus })
                 .match({ id: annotation_id, user_id }).select();
             if (error)
@@ -242,7 +242,7 @@ const createOperationByStatus = async (annotation_id, annotation_name, annotatio
         if (!op_action)
             return { data: null, error: null, status: 200, message: 'no action to perform' };
         else if (op_action === 'create') {
-            const { data } = await wallet_op_controller_1.default.create(`Operation from ${annotation_name}`, annotation_value, `This Operation was created from ${annotation_name} annotation of type ${annotation_type}`, op_type, user_id, undefined, annotation_id);
+            const { data } = await wallet_op_controller_1.default.create(`Operation from ${annotation_name}`, annotation_value, `This Operation was created from ${annotation_name} annotation of type ${annotation_type}`, op_type, user_id, annotation_id);
             return { data, error: null, status: 200, message: 'operation created by Annotation Change' };
         }
         else {

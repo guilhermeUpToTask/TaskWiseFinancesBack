@@ -21,19 +21,18 @@ wallet_operation_router.post('/create', [
         .isNumeric().withMessage('operation value must be a number').toFloat(),
     body('description').escape().notEmpty().withMessage('operation description is required')
         .isString().withMessage('operation description must be a string'),
-    body('operation_type').escape().notEmpty().withMessage('operation_type is required')
+    body('type').escape().notEmpty().withMessage('type is required')
         .isIn(['income', 'expanse']).withMessage('operation_type must be income or expanse'),
-    body('operation_type_id').escape().toInt(),
 ], async (req: Request, res: Response) => {
     try {
         validationResult(req).throw();
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller.getUserIDFromJWT(userJWT);
-        const { name, value, description, operation_type, operation_type_id } = req.body;
+        const { name, value, description, type } = req.body;
 
         const { data, error, status, message } = await wallet_op_controller.
-            create(name, value, description, operation_type, user_id,operation_type_id);
+            create(name, value, description, type, user_id);
 
         //we should not return user_id back to client...
         return res.status(status).json({ data, error, message });

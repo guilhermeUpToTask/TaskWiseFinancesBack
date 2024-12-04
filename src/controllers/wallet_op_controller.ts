@@ -25,21 +25,20 @@ const create = async (
     name: string,
     value: number,
     description: string,
-    operation_type: op_type,
+    type: op_type,
     user_id: string,
-    operation_type_id?: number,
     annotation_id?: number
 ): Promise<ServerResponse> => {
     try {
         const currentDate = dayjs().format('YYYY-MM-DD');
-        await op_create_map[operation_type](user_id, value);
+        await op_create_map[type](user_id, value);
         const { error } = await supabase.from('wallet_operations')
-            .insert({ name, user_id, value, description, operation_type, operation_type_id, date: currentDate, annotation_id });
+            .insert({ name, user_id, value, description, type, date: currentDate, annotation_id });
         if (error)
             throw error;
         else {
             return {
-                data: { name, user_id, value, description, operation_type, operation_type_id, date: currentDate } as Operation,
+                data: { name, user_id, value, description, type, date: currentDate } as Operation,
                 status: 201, error, message: 'sucessfully created wallet'
             }
         }

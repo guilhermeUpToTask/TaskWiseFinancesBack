@@ -110,18 +110,17 @@ annotation_router.put('/update', [
         .isDate().withMessage('date must be a dateType format (YYYY/MM/DD)'),
     (0, express_validator_1.body)('id').escape().notEmpty().withMessage('annotation id is required')
         .isInt().withMessage('annotation id must be a number'),
-    (0, express_validator_1.body)('annon_type').escape().notEmpty().withMessage('annotation type is required')
+    (0, express_validator_1.body)('type').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['bill', 'payment']).withMessage('annotation type must be bills or payment'),
-    (0, express_validator_1.body)('annon_type_id').escape().toInt(),
 ], async (req, res) => {
     try {
         (0, express_validator_1.validationResult)(req).throw();
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller_1.default.getUserIDFromJWT(userJWT);
-        const { id, name, description, value, repeat, status: annon_status, date, annon_type, annon_type_id } = req.body;
+        const { id, name, description, value, repeat, status: annon_status, date, type } = req.body;
         const { data, error, status, message } = await annotation_controller_1.default
-            .update(id, user_id, name, description, value, date, repeat, annon_status, annon_type, annon_type_id);
+            .update(id, user_id, name, description, value, date, repeat, annon_status, type);
         //we should not return user_id back to client...
         return res.status(status).json({ data, error, message });
     }
@@ -141,7 +140,7 @@ annotation_router.put('/confirm_status', [
         .isInt().withMessage('annotation id must be a number'),
     (0, express_validator_1.body)('status').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['pendent', 'expired', 'payed', 'recived']).withMessage('invalid annotation status'),
-    (0, express_validator_1.body)('annon_type').escape().notEmpty().withMessage('annotation type is required')
+    (0, express_validator_1.body)('type').escape().notEmpty().withMessage('annotation type is required')
         .isIn(['bill', 'payment']).withMessage('annotation type must be bills or payment'),
     (0, express_validator_1.body)('name').escape().notEmpty().withMessage('annotation name is required'),
     (0, express_validator_1.body)('value').escape().notEmpty().withMessage('annotation value is required')
@@ -153,9 +152,9 @@ annotation_router.put('/confirm_status', [
         const { headers: { authorization }, } = req;
         const userJWT = authorization?.split(' ')[1] || '';
         const user_id = await user_controller_1.default.getUserIDFromJWT(userJWT);
-        const { id: annotation_id, name, value, status: annon_status, annon_type } = req.body;
+        const { id: annotation_id, name, value, status: annon_status, type } = req.body;
         const { data, error, status, message } = await annotation_controller_1.default
-            .confirmStatus(user_id, annotation_id, name, value, annon_status, annon_type);
+            .confirmStatus(user_id, annotation_id, name, value, annon_status, type);
         return res.status(status).json({ data, error, message });
     }
     catch (e) {

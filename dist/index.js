@@ -14,7 +14,7 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)({ credentials: true, origin: true }));
 // Add your routes here
 app.use('/wallet', wallet_router_1.default);
-app.use('/wallet_operation', wallet_operation_router_1.default);
+app.use('/operation', wallet_operation_router_1.default);
 app.use('/annotation', annotation_router_1.default);
 app.use('/prediction_date', prediction_date_router_1.default);
 const PORT = process.env.PORT || 3000;

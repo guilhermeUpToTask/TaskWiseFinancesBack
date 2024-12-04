@@ -166,16 +166,15 @@ const update = async (
     date: 'string',
     repeat: AnnotationRepeat,
     status: AnnotationStatus,
-    annon_type: AnnotationType,
-    annon_type_id?: number,
+    type: AnnotationType,
 
 ): Promise<ServerResponse> => {
     try {
 
         const { message: operationMessage } = await createOperationByStatus(
-            annotation_id, name, value, user_id, status, annon_type);
+            annotation_id, name, value, user_id, status, type);
 
-        const { error, data } = await supabase.from('annotations').update({ user_id, annon_type_id, annon_type, name, description, value, date, repeat, status })
+        const { error, data } = await supabase.from('annotations').update({ user_id, type, name, description, value, date, repeat, status })
             .match({ id: annotation_id, user_id: user_id }).select();
         if (error) throw error;
 
@@ -259,17 +258,17 @@ const confirmStatus = async (
     name: string,
     value: number,
     status: AnnotationStatus,
-    annon_type: AnnotationType,
+    type: AnnotationType,
 ): Promise<ServerResponse> => {
     try {
         if (status === 'payed' || status === 'recived') {
             throw getNewResponseError('Annotation already confirmed', 400);
         }
         else if (status === 'expired' || status === 'pendent') {
-            const newStatus: AnnotationStatus = (annon_type === 'payment') ? 'recived' : 'payed';
+            const newStatus: AnnotationStatus = (type === 'payment') ? 'recived' : 'payed';
 
             const { message: operationMessage } = await createOperationByStatus(
-                annotation_id, name, value, user_id, newStatus, annon_type);
+                annotation_id, name, value, user_id, newStatus, type);
 
             const { data, error } = await supabase.from('annotations').update({ status: newStatus })
                 .match({ id: annotation_id, user_id }).select();
@@ -327,7 +326,6 @@ const createOperationByStatus = async (
                 `This Operation was created from ${annotation_name} annotation of type ${annotation_type}`,
                 op_type,
                 user_id,
-                undefined,
                 annotation_id
             )
             return { data, error: null, status: 200, message: 'operation created by Annotation Change' }
